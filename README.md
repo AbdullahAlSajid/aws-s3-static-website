@@ -52,7 +52,11 @@ The difference between recorded and actual downtime comes from the check interva
 Every push to `master` triggers a GitHub Actions workflow (`.github/workflows/deploy.yml`) that:
 
 1. Checks out the code on a fresh runner
-2. Authenticates to AWS using credentials stored in GitHub Secrets
+2. Authenticates to AWS using **OIDC**: GitHub issues a short-lived signed token, and AWS exchanges it for temporary credentials. No AWS keys are stored in GitHub.
 3. Deploys `index.html` to S3
 
-The workflow uses a dedicated IAM user (`github-actions-deployer`) with a least-privilege policy: it can only list, upload and delete objects in this one bucket.
+The IAM role's trust policy only allows workflows from this repository on the `master` branch, identified by GitHub's immutable owner and repository IDs. The role's permissions are least-privilege: list, upload and delete objects in this one bucket only.
+
+### Troubleshooting note
+
+The first OIDC run failed with `Not authorized to perform sts:AssumeRoleWithWebIdentity`. I added a temporary debug step to print the token's claims and found that GitHub sends the subject with immutable IDs (`repo:owner@id/repo@id:ref:...`), while the trust policy used the name-only format. Updating the trust policy fixed it.
