@@ -12,6 +12,8 @@ flowchart LR
     SC[StatusCake<br/>Uptime check every 5 min<br/>global test locations] -->|HTTP check| S3
     SC -->|Alert on down / recovery| E[Email]
     E -->|Channel email address| SL[Slack #alerts channel]
+    DEV[Developer] -->|git push| GH[GitHub Actions]
+    GH -->|aws s3 cp| S3
 ```
 
 ## What I built
@@ -44,3 +46,13 @@ The difference between recorded and actual downtime comes from the check interva
 **Recovery alert**
 
 ![Recovery alert in Slack](screenshots/alert-up.png)
+
+## Automated deployment (CI/CD)
+
+Every push to `master` triggers a GitHub Actions workflow (`.github/workflows/deploy.yml`) that:
+
+1. Checks out the code on a fresh runner
+2. Authenticates to AWS using credentials stored in GitHub Secrets
+3. Deploys `index.html` to S3
+
+The workflow uses a dedicated IAM user (`github-actions-deployer`) with a least-privilege policy: it can only list, upload and delete objects in this one bucket.
