@@ -2,10 +2,18 @@
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "AllowCloudFrontServicePrincipal",
             "Effect": "Allow",
-            "Principal": "*",
+            "Principal": {
+                "Service": "cloudfront.amazonaws.com"
+            },
             "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::sajid-portfolio-site007/*"
+            "Resource": "arn:aws:s3:::sajid-portfolio-site007/*",
+            "Condition": {
+                "ArnLike": {
+                    "AWS:SourceArn": "arn:aws:cloudfront::XXXXXXXXXXXX:distribution/XXXXXXXXXXXXXX"
+                }
+            }
         }
     ]
 }
